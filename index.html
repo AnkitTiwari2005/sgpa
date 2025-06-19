@@ -362,6 +362,13 @@
             display: block;
         }
 
+        /* SGPA CONTAINER CONSTRAINTS - Specific fix for SGPA tab */
+        #sgpa-calc {
+            min-width: 0; /* Override inherited min-width */
+            max-width: 100%; /* Ensure it doesn't exceed parent width */
+            /* box-sizing: border-box is global, so no need to repeat here unless specific override needed */
+        }
+
         /* Input group styling */
         .input-group {
             margin-bottom: 20px;

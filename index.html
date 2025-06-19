@@ -1,0 +1,2479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GradeFlow Pro: Your Academic Compass</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    
+    <style>
+        /* Root CSS Variables for consistent theme */
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #7209b7;
+            --accent: #f72585;
+            --success: #4cc9f0; /* Used for success messages and some chart elements */
+            --error-red: #e63946; /* Explicit error color */
+            --light: #f8f9fa;
+            --dark: #212529;
+            --bg-light: #ffffff;
+            --bg-dark: #121212;
+            --card-light: rgba(255, 255, 255, 0.85); /* Slightly transparent for glass effect */
+            --card-dark: rgba(30, 30, 30, 0.85);
+            --text-light: #333333;
+            --text-dark: #f0f0f0;
+            --border-light: rgba(224, 224, 224, 0.5);
+            --border-dark: rgba(51, 51, 51, 0.5);
+            --shadow: 0 10px 30px rgba(0,0,0,0.05);
+            --transition: all 0.3s ease;
+            --border-radius: 16px;
+            --glow: 0 0 15px rgba(67, 97, 238, 0.3);
+            --glass: rgba(255, 255, 255, 0.15); /* Lighter glass effect for light mode */
+            --glass-dark: rgba(0, 0, 0, 0.15); /* Darker glass effect for dark mode */
+        }
+
+        /* Universal box-sizing for predictable layout behavior */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box; 
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* CRITICAL: Prevent Global Horizontal Scroll and ensure full width */
+        html, body {  
+            width: 100%;  
+            max-width: 100vw;  
+            overflow-x: hidden; /* Prevents horizontal scrolling */
+            height: 100%; /* Ensures body takes full viewport height */
+        }
+
+        body {
+            background: linear-gradient(135deg, #f0f5ff 0%, #e6edff 100%); /* Light background gradient */
+            color: var(--text-light); /* Default text color for light mode */
+            min-height: 100vh; /* Minimum height to cover viewport */
+            transition: var(--transition); /* Smooth transition for theme changes */
+            padding: 20px; /* Default padding for larger screens */
+            position: relative; /* For background blobs */
+            backdrop-filter: blur(20px); /* Subtle blur effect */
+            display: flex; /* Use flex to center the container */
+            justify-content: center;
+            align-items: flex-start; /* Align to top for scrollable content */
+        }
+
+        /* Dark mode styles */
+        body.dark-mode {
+            background: linear-gradient(135deg, #0c0e2b 0%, #1a1a40 100%); /* Dark background gradient */
+            color: var(--text-dark); /* Text color for dark mode */
+        }
+
+        /* Make All Containers Responsive - Global properties */
+        .dashboard, .main-content, .sidebar, .card, .result-container {  
+            width: 100%;  
+            box-sizing: border-box; /* Ensures padding and borders are included in the element's total width and height */
+        }
+
+        .container {
+            position: relative;
+            z-index: 2; /* Ensures content is above background blobs */
+            padding: 0 20px; /* Default horizontal padding for desktop */
+            width: 100%; /* Take full width of parent */
+            max-width: 1300px; /* Increased max-width for a wider look */
+            margin: 0 auto; /* Center the container horizontally */
+        }
+
+        /* Background blobs for visual flair */
+        .bg-blob {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.1;
+            z-index: 1; /* Below content */
+            animation: float 15s infinite ease-in-out;
+        }
+
+        .blob-1 {
+            background: var(--primary);
+            top: 10%;
+            right: -10%;
+        }
+
+        .blob-2 {
+            background: var(--accent);
+            bottom: 10%;
+            left: -10%;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0); }
+            50% { transform: translate(-20px, 20px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        /* Header styling */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            width: 100%; /* Ensure header takes full width of container */
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-shrink: 1; /* Allow logo to shrink if needed */
+        }
+
+        .logo-icon {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            box-shadow: var(--shadow);
+            animation: pulse 2s infinite;
+            flex-shrink: 0; /* Prevent icon from shrinking */
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(67, 97, 238, 0.4); }
+            70% { transform: scale(1.03); box-shadow: 0 0 0 15px rgba(67, 97, 238, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(67, 97, 238, 0); }
+        }
+
+        .logo-text {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text; /* For gradient text effect */
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            white-space: nowrap; /* Prevent logo text from wrapping by default */
+            overflow: hidden; /* Hide overflow if text is too long */
+            text-overflow: ellipsis; /* Add ellipsis for clipped text */
+        }
+
+        /* Theme toggle switch */
+        .theme-toggle {
+            background: var(--bg-light);
+            border: 1px solid var(--border-light);
+            width: 60px;
+            height: 30px;
+            border-radius: 15px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.4s ease-in-out;
+            box-shadow: var(--shadow);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 5px;
+        }
+
+        body.dark-mode .theme-toggle {
+            background: var(--bg-dark);
+            border-color: var(--border-dark);
+        }
+
+        .theme-toggle::before {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--primary);
+            top: 2px;
+            left: 3px;
+            transition: all 0.4s ease-in-out;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        body.dark-mode .theme-toggle::before {
+            left: 32px;
+            background: var(--success); /* Different color for dark mode toggle */
+        }
+
+        .theme-toggle i {
+            position: relative;
+            z-index: 2;
+            font-size: 16px;
+            color: var(--primary); /* Default icon color (light mode) */
+            transition: all 0.4s ease-in-out;
+        }
+
+        .theme-toggle i.fa-sun {
+            color: #FFD700; /* Sun icon specific color */
+        }
+        .theme-toggle i.fa-moon {
+            color: #d8b2ff; /* Moon icon specific color */
+        }
+
+        body.dark-mode .theme-toggle i.fa-sun {
+            color: var(--text-dark); /* Sun icon visible in dark mode */
+        }
+
+        body.dark-mode .theme-toggle i.fa-moon {
+            color: var(--primary); /* Moon icon visible in light mode */
+        }
+
+        /* Dashboard layout using CSS Grid for main content and sidebar */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 350px; /* Main content | Sidebar */
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        /* Card styling - used for all sections */
+        .card {
+            background: var(--card-light);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 30px;
+            transition: var(--transition);
+            backdrop-filter: blur(12px); /* Glass effect */
+            border: 1px solid var(--border-light);
+            position: relative;
+            overflow: hidden; /* Ensure content respects border-radius */
+            z-index: 2;
+        }
+
+        body.dark-mode .card {
+            background: var(--card-dark);
+            border-color: var(--border-dark);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px; /* Top border accent */
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        body.dark-mode .card-header {
+            border-bottom-color: var(--border-dark);
+        }
+
+        .card-title {
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title i {
+            color: var(--primary);
+        }
+
+        /* Tab navigation for SGPA and CGPA */
+        .tabs {
+            display: flex;
+            background: #f0f2f5;
+            border-radius: 12px;
+            padding: 5px;
+            margin-bottom: 25px;
+            position: relative;
+            flex-wrap: wrap; /* Allow tabs to wrap on smaller screens */
+            width: 100%;
+        }
+
+        body.dark-mode .tabs {
+            background: #2a2a2a;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            position: relative;
+            z-index: 2;
+            white-space: nowrap; /* Prevent tab text from wrapping */
+        }
+
+        .tab.active {
+            color: white;
+        }
+
+        .tab.active::before {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            right: 5px;
+            bottom: 5px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 8px;
+            z-index: -1;
+            box-shadow: var(--glow);
+        }
+
+        /* Fade-in animation for tab content */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Input group styling */
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-light);
+            font-size: 15px;
+        }
+
+        body.dark-mode label {
+            color: var(--text-dark);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border-light);
+            background: var(--bg-light);
+            color: var(--text-light);
+            font-size: 16px;
+            transition: var(--transition);
+        }
+
+        body.dark-mode input,
+        body.dark-mode select,
+        body.dark-mode textarea {
+            background: var(--card-dark);
+            border-color: var(--border-dark);
+            color: var(--text-dark);
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+        input.invalid, select.invalid {
+            border-color: var(--error-red);
+            box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.2);
+        }
+        .error-message {
+            color: var(--error-red);
+            font-size: 0.85em;
+            margin-top: 5px;
+            display: none; /* Hidden by default */
+        }
+        input.invalid + .error-message, select.invalid + .error-message {
+            display: block;
+        }
+
+
+        /* Action button styling */
+        .add-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 14px 25px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: var(--transition);
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .add-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: 0.5s;
+            z-index: -1;
+        }
+
+        .add-btn:hover::before {
+            left: 100%;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(67, 97, 238, 0.4);
+        }
+
+        /* Handle Table Overflow Gracefully */
+        .result-container {
+            margin-top: 30px;
+            overflow-x: auto; /* Enable horizontal scrolling for tables on small screens */
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            padding-bottom: 10px; /* Add some padding to see the scrollbar clearly */
+            max-width: 100%; /* Ensure container constraints as per doc */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            table-layout: auto;
+        }
+
+        th, td {
+            padding: 16px 20px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-light);
+            white-space: nowrap; /* Keep table cell content on a single line by default */
+        }
+
+        body.dark-mode th,
+        body.dark-mode td {
+            border-bottom-color: var(--border-dark);
+        }
+
+        th {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) {
+            background: rgba(67, 97, 238, 0.05);
+        }
+
+        body.dark-mode tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 16px;
+            transition: var(--transition);
+            padding: 5px;
+            border-radius: 6px;
+        }
+
+        .action-btn:hover {
+            background: rgba(67, 97, 238, 0.1);
+        }
+
+        /* Result display (SGPA/CGPA) */
+        .sgpa-display {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sgpa-display::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, rgba(255,255,255,0.15) 0%, transparent 70%);
+        }
+
+        .sgpa-label {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .sgpa-value {
+            font-size: 48px;
+            font-weight: 800;
+            margin: 10px 0;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            transition: all 0.5s ease;
+        }
+        
+        body:not(.dark-mode) .sgpa-value {
+            color: var(--text-dark); /* Ensure text is visible in light mode */
+        }
+
+        @keyframes pulse-sgpa {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .sgpa-scale {
+            font-size: 16px;
+            opacity: 0.9;
+            position: relative;
+            z-index: 2;
+        }
+
+        .chart-container {
+            height: 250px;
+            margin-top: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* CGPA Progress Bar Container */
+        .cgpa-progress-container {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+            position: relative;
+            z-index: 2;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+            display: none; /* Controlled by JS based on active tab */
+        }
+
+        .cgpa-progress-bar {
+            height: 100%;
+            width: 0%; /* Initial width */
+            background: linear-gradient(90deg, #4cc9f0, #4361ee); /* Success blue to primary blue */
+            border-radius: 10px;
+            transition: width 0.7s ease-out;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        .cgpa-progress-label {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            z-index: 3;
+        }
+
+        /* Export buttons */
+        .export-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .export-btn {
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: var(--transition);
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .export-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(255,255,255,0.3), transparent);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .export-btn:hover::before {
+            opacity: 1;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .export-btn.pdf {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e8e); /* Red gradient */
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .export-btn.csv {
+            background: linear-gradient(135deg, #4cc9f0, #6bd6ff); /* Blue gradient */
+            color: white;
+            box-shadow: 0 4px 15px rgba(76, 201, 240, 0.3);
+        }
+
+        /* Features grid */
+        .features-grid {
+            display: grid;
+            gap: 20px;  
+            margin-top: 30px; 
+            padding: 0; 
+        }
+
+        .main-content .features-grid {
+             width: 100%;
+        }
+
+        .feature-card {
+            background: var(--bg-light);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: var(--transition);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-light);
+            width: 100%;
+        }
+
+        body.dark-mode .feature-card {
+            background: var(--card-dark);
+            border-color: var(--border-dark);
+        }
+
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .feature-text h3 {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .feature-text p {
+            font-size: 14px;
+            color: #777;
+        }
+
+        body.dark-mode .feature-text p {
+            color: #aaa;
+        }
+
+        /* Footer styling */
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            margin-top: 30px;
+            color: #777;
+            border-top: 1px solid var(--border-light);
+            font-size: 14px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        body.dark-mode footer {
+            border-top-color: var(--border-dark);
+            color: #aaa;
+        }
+
+        .linkedin-btn {
+            background: #0077B5; /* LinkedIn blue */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 15px;
+            font-size: 13px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            text-decoration: none;
+            box-shadow: 0 2px 5px rgba(0, 119, 181, 0.3);
+        }
+
+        .linkedin-btn:hover {
+            background: #005582;
+            transform: translateY(-1px);
+        }
+
+        /* Status bar for messages */
+        .status-bar {
+            padding: 10px 15px;
+            border-radius: 8px;
+            background: rgba(76, 201, 240, 0.15); /* Light blue for info/success */
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #4cc9f0;
+            font-weight: 500;
+        }
+
+        body.dark-mode .status-bar {
+            background: rgba(76, 201, 240, 0.1);
+        }
+
+        .status-bar.error {
+            background: rgba(255, 107, 107, 0.15); /* Red for errors */
+            color: #ff6b6b;
+        }
+
+        body.dark-mode .status-bar.error {
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #777;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #ddd;
+        }
+
+        /* Highlight animation for SGPA/CGPA value updates */
+        .highlight {
+            animation: highlight 2s ease;
+        }
+
+        @keyframes highlight {
+            0% { background: rgba(76, 201, 240, 0.3); } /* Fades from a blue background */
+            100% { background: transparent; }
+        }
+
+        /* Mobile specific paste button */
+        .paste-input-group {
+            position: relative;
+            display: flex; 
+            flex-direction: column; 
+            align-items: stretch; 
+            gap: 10px; 
+        }
+        .paste-input-group textarea {
+            flex-grow: 1;
+            margin-bottom: 0; 
+        }
+        .paste-button {
+            display: none; /* Hidden by default for desktop/PC */
+            background: linear-gradient(135deg, #2ECC71, #1ABC9C); /* Green gradient */
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            white-space: nowrap;
+            box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
+            transition: all 0.3s ease;
+        }
+        .paste-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(46, 204, 113, 0.4);
+        }
+        .paste-button i {
+            margin-right: 5px;
+        }
+
+        /* CGPA specific styles */
+        .cgpa-input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Responsive grid for CGPA inputs */
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: flex-end;
+        }
+
+        .cgpa-entry-list {
+            margin-top: 20px;
+        }
+
+        .cgpa-entry-item {
+            background: var(--background-light);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        body.dark-mode .cgpa-entry-item {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .cgpa-entry-item span {
+            font-size: 0.95em;
+            color: var(--text-light);
+            flex: 1;
+            min-width: 80px;
+        }
+
+        body.dark-mode .cgpa-entry-item span {
+            color: var(--text-dark);
+        }
+
+        .cgpa-entry-item .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .cgpa-entry-item .actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--accent);
+            font-size: 1.1em;
+            transition: transform 0.2s ease, color 0.3s ease;
+        }
+
+        .cgpa-entry-item .actions button:hover {
+            transform: scale(1.1);
+            color: var(--primary-dark);
+        }
+
+        /* Custom Modal Styles */
+        .custom-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .custom-modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .custom-modal-content {
+            background: var(--bg-light);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            position: relative;
+            border: 1px solid var(--border-light);
+        }
+        body.dark-mode .custom-modal-content {
+            background: var(--card-dark);
+            border-color: var(--border-dark);
+        }
+
+        .custom-modal-overlay.active .custom-modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .custom-modal-content h3 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .custom-modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .custom-modal-buttons button {
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            flex: 1;
+            max-width: 120px;
+        }
+
+        .custom-modal-buttons .btn-confirm {
+            background: linear-gradient(135deg, var(--accent), #e63946);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 10px rgba(247, 37, 133, 0.3);
+        }
+        .custom-modal-buttons .btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(247, 37, 133, 0.4);
+        }
+
+        .custom-modal-buttons .btn-cancel {
+            background: var(--bg-light);
+            color: var(--text-light);
+            border: 1px solid var(--border-light);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        body.dark-mode .custom-modal-buttons .btn-cancel {
+            background: var(--bg-dark);
+            border-color: var(--border-dark);
+            color: var(--text-dark);
+        }
+        .custom-modal-buttons .btn-cancel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+
+        /* Responsive Design */
+        @media (max-width: 900px) {
+            .dashboard {
+                grid-template-columns: 1fr; /* Stack main content and sidebar vertically */
+                gap: 20px; 
+            }
+            .container {
+                padding: 0 15px; /* Reduced horizontal padding for mobile */
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px 0; /* Only vertical padding, horizontal handled by container */
+            }
+            .container {
+                padding: 0 10px; /* Reduced horizontal padding for container on mobile */
+            }
+            .main-container { /* No longer used explicitly in new HTML structure, but good to keep if any other wrapper exists */
+                padding: 15px;
+            }
+            header {
+                flex-direction: column; /* Stack logo and toggle */
+                align-items: center;
+                gap: 15px;
+                margin-bottom: 20px;
+            }
+            .logo {
+                flex-direction: column;
+                gap: 5px;
+            }
+            .logo-text {
+                font-size: 22px; /* Smaller logo text on mobile */
+                text-align: center;
+            }
+            .card {
+                padding: 15px; /* Reduced card padding for mobile */
+            }
+            .card-title {
+                font-size: 18px; /* Smaller card titles on mobile */
+            }
+            .tabs .tab {
+                min-width: unset; /* Allow tabs to be more flexible */
+                padding: 10px; /* Smaller padding for tabs */
+                font-size: 14px; /* Smaller font size for tabs */
+            }
+            .input-group label {
+                font-size: 14px;
+            }
+            input, select, textarea {
+                padding: 12px; /* Smaller padding for inputs */
+                font-size: 14px;
+            }
+            .add-btn {
+                padding: 12px 20px; /* Smaller padding for buttons */
+                font-size: 14px;
+            }
+            .sgpa-label {
+                font-size: 16px;
+            }
+            .sgpa-value {
+                font-size: 40px; /* Adjusted SGPA value font size for mobile */
+            }
+            .sgpa-scale {
+                font-size: 14px;
+            }
+            .export-btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .feature-card {
+                flex-direction: column; /* Stack icon and text vertically for features */
+                text-align: center;
+                gap: 10px;
+                padding: 15px;
+            }
+            .feature-icon {
+                margin-bottom: 5px;
+            }
+            .feature-text h3 {
+                font-size: 15px;
+            }
+            .feature-text p {
+                font-size: 13px;
+            }
+            footer {
+                padding: 15px 0; /* Consistent footer padding */
+                font-size: 12px; /* Smaller footer text */
+            }
+            table {
+                table-layout: auto;
+                min-width: unset;
+            }
+            th, td {
+                font-size: 12px;
+                padding: 8px 6px;
+                word-break: break-word; /* Allow words to break */
+                overflow-wrap: break-word; /* Ensure long words wrap */
+            }
+            .paste-button {
+                display: flex; /* Show on mobile */
+            }
+            .cgpa-input-grid {
+                grid-template-columns: 1fr; /* Stack CGPA inputs on small screens */
+            }
+            .custom-modal-content {
+                padding: 20px;
+            }
+            .custom-modal-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .custom-modal-buttons button {
+                max-width: 100%;
+            }
+        }
+
+        /* Even smaller adjustments for extremely narrow phones (e.g., iPhone SE) */
+        @media (max-width: 400px) {
+            .logo-text {
+                font-size: 20px; /* Further adjust logo text size */
+            }
+            .logo-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+            .theme-toggle {
+                width: 45px;
+                height: 22px;
+            }
+            .theme-toggle::before {
+                width: 18px;
+                height: 18px;
+                top: 2px;
+                left: 3px;
+            }
+            body.dark-mode .theme-toggle::before {
+                left: 24px;
+            }
+            .tabs .tab {
+                padding: 6px; /* Even smaller tab padding */
+                font-size: 12px;
+            }
+            th, td {
+                font-size: 11px;
+                padding: 6px 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-blob blob-1"></div>
+    <div class="bg-blob blob-2"></div>
+    
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-calculator"></i>
+                </div>
+                <div class="logo-text">GradeFlow Pro</div>
+            </div>
+            <div class="theme-toggle" id="themeToggle">
+                <i class="fas fa-sun"></i>
+                <i class="fas fa-moon"></i>
+            </div>
+        </header>
+        
+        <div class="dashboard">
+            <div class="main-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title"><i class="fas fa-keyboard"></i> Calculate Your Grades</h2>
+                    </div>
+                    
+                    <div class="tabs" id="mainTabs">
+                        <div class="tab active" data-tab="sgpa-calc">SGPA Calculator</div>
+                        <div class="tab" data-tab="cgpa-calc">CGPA Calculator</div>
+                    </div>
+                    
+                    <!-- SGPA Calculator Tab Content -->
+                    <div class="tab-content active" id="sgpa-calc">
+                        <div class="tabs sub-tabs" id="sgpaSubTabs">
+                            <div class="tab active" data-tab="manual-sgpa">Manual Entry</div>
+                            <div class="tab" data-tab="paste-sgpa">Paste Results</div>
+                        </div>
+
+                        <!-- Manual Entry for SGPA -->
+                        <div class="tab-content active" id="manual-sgpa">
+                            <div class="input-group">
+                                <label for="subjectName">Subject Name</label>
+                                <input type="text" id="subjectName" placeholder="e.g., Data Structures, Engineering Math">
+                                <span class="error-message" id="subjectNameError"></span>
+                            </div>
+                            
+                            <div class="input-group">
+                                <label for="credits">Credits</label>
+                                <input type="number" id="credits" placeholder="e.g., 4" min="1" max="10" step="0.1">
+                                <span class="error-message" id="creditsError"></span>
+                            </div>
+                            
+                            <div class="input-group">
+                                <label for="grade">Grade</label>
+                                <select id="grade">
+                                    <option value="">Select Grade</option>
+                                    <option value="10">A+ (10)</option>
+                                    <option value="9">A (9)</option>
+                                <option value="8">B+ (8)</option>
+                                <option value="7">B (7)</option>
+                                <option value="6">C+ (6)</option>
+                                <option value="5">C (5)</option>
+                                <option value="4">D (4)</option>
+                                <option value="0">F (0)</option>
+                                <option value="QUALIFIED">Qualified</option>
+                                <option value="ABSENT">Absent</option>
+                                </select>
+                                <span class="error-message" id="gradeError"></span>
+                            </div>
+                            
+                            <button class="add-btn" id="addSubject">
+                                <i class="fas fa-plus"></i> Add Subject
+                            </button>
+                        </div>
+                        
+                        <!-- Paste Results for SGPA -->
+                        <div class="tab-content" id="paste-sgpa">
+                            <div class="input-group paste-input-group">
+                                <div> 
+                                    <label for="resultText">Paste Your Result Sheet</label>
+                                    <textarea id="resultText" rows="6" placeholder="Paste your result sheet text here..."></textarea>
+                                </div>
+                                <button class="paste-button" id="mobilePasteBtn">
+                                    <i class="fas fa-paste"></i> Paste
+                                </button>
+                            </div>
+                            
+                            <button class="add-btn" id="parseResults">
+                                <i class="fas fa-magic"></i> Parse Results
+                            </button>
+                            
+                            <div id="parseStatus" class="status-bar" style="display: none;">
+                                <i class="fas fa-sync fa-spin"></i>
+                                <span>Processing your results...</span>
+                            </div>
+                        </div>
+
+                        <div class="result-container">
+                            <div class="card-header">
+                                <h3 class="card-title"><i class="fas fa-list-alt"></i> Current Semester Subjects</h3>
+                                <button class="action-btn" id="resetBtn" title="Clear all subjects">
+                                    <i class="fas fa-trash-alt"></i> Clear All
+                                </button>
+                            </div>
+                            
+                            <table id="resultTable">
+                                <thead>
+                                    <tr>
+                                        <th>Subject</th>
+                                        <th>Credits</th>
+                                        <th>Grade</th>
+                                        <th>Points</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="resultBody">
+                                    <!-- SGPA subjects will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- CGPA Calculator Tab Content -->
+                    <div class="tab-content" id="cgpa-calc">
+                        <div class="input-group cgpa-input-grid">
+                            <div>
+                                <label for="semesterSgpa">Semester SGPA</label>
+                                <input type="number" id="semesterSgpa" placeholder="e.g., 8.5" min="0" max="10" step="0.01">
+                                <span class="error-message" id="semesterSgpaError"></span>
+                            </div>
+                            <div>
+                                <label for="semesterCredits">Total Credits</label>
+                                <input type="number" id="semesterCredits" placeholder="e.g., 20" min="1" step="0.1">
+                                <span class="error-message" id="semesterCreditsError"></span>
+                            </div>
+                            <button class="add-btn" id="addSemester">
+                                <i class="fas fa-plus-circle"></i> Add Semester
+                            </button>
+                        </div>
+
+                        <div class="result-container">
+                            <div class="card-header">
+                                <h3 class="card-title"><i class="fas fa-history"></i> Previous Semesters</h3>
+                                <button class="action-btn" id="resetCgpaBtn" title="Clear all semester data">
+                                    <i class="fas fa-trash-alt"></i> Clear All
+                                </button>
+                            </div>
+                            <table id="cgpaTable">
+                                <thead>
+                                    <tr>
+                                        <th>SGPA</th>
+                                        <th>Credits</th>
+                                        <th>Total Points</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cgpaBody">
+                                    <!-- CGPA semester entries will be populated here -->
+                                </tbody>
+                            </table>
+                            <div class="empty-state" id="cgpaEmptyState" style="display: block;">
+                                <i class="fas fa-inbox"></i>
+                                <p>No semesters added yet for CGPA calculation. Add your previous semester SGPAs!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Features Grid (retained) -->
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <div class="feature-text">
+                            <h3>Advanced Parsing</h3>
+                            <p>Intelligent result sheet extraction</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-rocket"></i>
+                        </div>
+                        <div class="feature-text">
+                            <h3>Blazing Fast</h3>
+                            <p>Optimized for quick calculations</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-file-export"></i>
+                        </div>
+                        <div class="feature-text">
+                            <h3>Professional Reports</h3>
+                            <p>Beautiful PDF and CSV exports</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sidebar">
+                <!-- SGPA/CGPA Display Card -->
+                <div class="card sgpa-display">
+                    <div class="sgpa-label" id="currentGradeLabel">Your Semester Grade Point Average</div>
+                    <div class="sgpa-value" id="currentGradeValue">0.00</div>
+                    <div class="sgpa-scale">Scale: 0.00 - 10.00</div>
+                    
+                    <!-- Chart for SGPA -->
+                    <div class="chart-container" id="sgpaChartContainer">
+                        <canvas id="gradeChart"></canvas>
+                    </div>
+
+                    <!-- Progress Bar for CGPA -->
+                    <div class="cgpa-progress-container" id="cgpaProgressBarContainer">
+                        <div class="cgpa-progress-bar" id="cgpaProgressBar"></div>
+                        <div class="cgpa-progress-label" id="cgpaProgressLabel">0.00 / 10.00</div>
+                    </div>
+                </div>
+                
+                <!-- Export Results Card (retained) -->
+                <div class="card" style="margin-bottom: 20px;">
+                    <div class="card-header">
+                        <h2 class="card-title"><i class="fas fa-download"></i> Export Results</h2>
+                    </div>
+                    
+                    <div class="export-actions">
+                        <button class="export-btn pdf" id="exportPdf">
+                            <i class="fas fa-file-pdf"></i> Export PDF
+                        </button>
+                        <button class="export-btn csv" id="exportCsv">
+                            <i class="fas fa-file-csv"></i> Export CSV
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Report Bug/Feedback Form (retained) -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title"><i class="fas fa-bug"></i> Report Bug / Feedback</h2>
+                    </div>
+                    <div class="input-group">
+                        <label for="feedbackText">Describe the issue or provide feedback:</label>
+                        <textarea id="feedbackText" rows="4" placeholder="e.g., Calculation error, layout issue, new feature request..."></textarea>
+                    </div>
+                    <button class="add-btn" id="sendFeedbackBtn">
+                        <i class="fas fa-paper-plane"></i> Send Feedback
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Crafted with Precision by Ankit Tiwari</p>
+            <a href="https://www.linkedin.com/in/ankit-k-tiwari/" target="_blank" class="linkedin-btn">
+                <i class="fab fa-linkedin"></i> Connect on LinkedIn
+            </a>
+            <p>GradeFlow Pro &copy; 2025 | All calculations done locally on your device | Advanced Parsing Engine v3.0</p>
+        </footer>
+    </div>
+
+    <!-- Custom Confirmation Modal -->
+    <div class="custom-modal-overlay" id="customConfirmModal">
+        <div class="custom-modal-content">
+            <h3>Confirm Action</h3>
+            <p id="confirmMessage">Are you sure you want to perform this action?</p>
+            <div class="custom-modal-buttons">
+                <button class="btn-confirm" id="confirmYes">Yes</button>
+                <button class="btn-cancel" id="confirmNo">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Disable right-click context menu
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Disable common keyboard shortcuts for developer tools
+        document.addEventListener('keydown', event => {
+            // F12
+            if (event.key === 'F12') {
+                event.preventDefault();
+            }
+            // Ctrl+Shift+I (or Cmd+Option+I on Mac)
+            if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'I') {
+                event.preventDefault();
+            }
+            // Ctrl+Shift+J (or Cmd+Option+J on Mac)
+            if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'J') {
+                event.preventDefault();
+            }
+            // Ctrl+U (View Source)
+            if ((event.ctrlKey || event.metaKey) && event.key === 'U') {
+                event.preventDefault();
+            }
+        });
+
+
+        // DOM Elements
+        const themeToggle = document.getElementById('themeToggle');
+        const mainTabs = document.querySelectorAll('#mainTabs .tab');
+        const sgpaSubTabs = document.querySelectorAll('#sgpaSubTabs .tab');
+        const sgpaCalcTabContent = document.getElementById('sgpa-calc');
+        const cgpaCalcTabContent = document.getElementById('cgpa-calc');
+        const manualSgpaTabContent = document.getElementById('manual-sgpa');
+        const pasteSgpaTabContent = document.getElementById('paste-sgpa');
+        
+        const addSubjectBtn = document.getElementById('addSubject');
+        const parseResultsBtn = document.getElementById('parseResults');
+        const resetBtn = document.getElementById('resetBtn'); // SGPA reset
+        const exportPdfBtn = document.getElementById('exportPdf');
+        const exportCsvBtn = document.getElementById('exportCsv');
+        const resultBody = document.getElementById('resultBody');
+        const currentGradeValue = document.getElementById('currentGradeValue');
+        const currentGradeLabel = document.getElementById('currentGradeLabel');
+        const subjectNameInput = document.getElementById('subjectName');
+        const creditsInput = document.getElementById('credits');
+        const gradeInput = document.getElementById('grade');
+        const resultText = document.getElementById('resultText');
+        const parseStatus = document.getElementById('parseStatus');
+        const feedbackTextarea = document.getElementById('feedbackText');
+        const sendFeedbackBtn = document.getElementById('sendFeedbackBtn');
+        const mobilePasteBtn = document.getElementById('mobilePasteBtn');
+
+        // Input error spans
+        const subjectNameError = document.getElementById('subjectNameError');
+        const creditsError = document.getElementById('creditsError');
+        const gradeError = document.getElementById('gradeError');
+        const semesterSgpaError = document.getElementById('semesterSgpaError');
+        const semesterCreditsError = document.getElementById('semesterCreditsError');
+
+        // CGPA elements
+        const addSemesterBtn = document.getElementById('addSemester');
+        const resetCgpaBtn = document.getElementById('resetCgpaBtn');
+        const semesterSgpaInput = document.getElementById('semesterSgpa');
+        const semesterCreditsInput = document.getElementById('semesterCredits');
+        const cgpaBody = document.getElementById('cgpaBody');
+        const cgpaEmptyState = document.getElementById('cgpaEmptyState');
+        const sgpaChartContainer = document.getElementById('sgpaChartContainer'); // Chart container
+        const cgpaProgressBarContainer = document.getElementById('cgpaProgressBarContainer'); // Progress bar container
+        const cgpaProgressBar = document.getElementById('cgpaProgressBar');
+        const cgpaProgressLabel = document.getElementById('cgpaProgressLabel');
+
+        // Custom Confirmation Modal Elements
+        const customConfirmModal = document.getElementById('customConfirmModal');
+        const confirmMessage = document.getElementById('confirmMessage');
+        const confirmYesBtn = document.getElementById('confirmYes');
+        const confirmNoBtn = document.getElementById('confirmNo');
+
+        // Grade mapping
+        const gradeMap = {
+            '10': 'A+',
+            '9': 'A',
+            '8': 'B+',
+            '7': 'B',
+            '6': 'C+',
+            '5': 'C',
+            '4': 'D',
+            '0': 'F',
+            'QUALIFIED': 'Qualified',
+            'ABSENT': 'Absent'
+        };
+
+        const reverseGradeMap = {
+            'A+': 10,
+            'A': 9,
+            'B+': 8,
+            'B': 7,
+            'C+': 6,
+            'C': 5,
+            'D': 4,
+            'F': 0,
+            'E': 0, // Assuming E maps to F (0 points)
+            'I': 0, // Assuming I maps to F (0 points)
+            'QUALIFIED': 'QUALIFIED',
+            'ABSENT': 'ABSENT'
+        };
+
+        // Data storage
+        let subjects = []; // For SGPA calculation
+        let semesters = []; // For CGPA calculation: [{ sgpa: 8.5, credits: 20 }]
+
+        // Chart.js global settings for responsive text
+        Chart.defaults.font.family = 'Poppins';
+
+        // Initialize Chart
+        const ctx = document.getElementById('gradeChart').getContext('2d');
+        const gradeChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['A+', 'A', 'B+', 'B', 'C+', 'C', 'D', 'F'],
+                datasets: [{
+                    data: [0, 0, 0, 0, 0, 0, 0, 0],
+                    backgroundColor: [],
+                    borderWidth: 0,
+                    hoverOffset: 15
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '',
+                            font: {
+                                size: 11
+                            },
+                            padding: 15
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.label}: ${context.parsed} subjects`;
+                            }
+                        }
+                    }
+                },
+                cutout: '65%'
+            }
+        });
+
+        // Function to update chart colors based on theme
+        function updateChartColors() {
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            
+            gradeChart.options.plugins.legend.labels.color = isDarkMode ? getComputedStyle(document.body).getPropertyValue('--text-dark') : getComputedStyle(document.body).getPropertyValue('--text-light');
+            
+            if (isDarkMode) {
+                gradeChart.data.datasets[0].backgroundColor = [
+                    '#4cc9f0', '#4361ee', '#3a0ca3', '#7209b7',
+                    '#f72585', '#ff6b6b', '#ff9e00', '#adb5bd'
+                ];
+            } else {
+                gradeChart.data.datasets[0].backgroundColor = [
+                    '#1ABC9C', '#2ECC71', '#3498DB', '#9B59B6',
+                    '#F1C40F', '#E67E22', '#E74C3C', '#BDC3C7'
+                ];
+            }
+            gradeChart.update();
+        }
+
+        // Theme Toggle
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('gradeFlowTheme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            updateChartColors();
+            updateGradeDisplayColor(); // Update SGPA/CGPA display color and progress bar color
+        });
+
+        // Custom Confirmation Modal Logic
+        let confirmCallback = null;
+
+        function showCustomConfirm(message, callback) {
+            confirmMessage.textContent = message;
+            confirmCallback = callback;
+            customConfirmModal.classList.add('active');
+        }
+
+        confirmYesBtn.addEventListener('click', () => {
+            if (confirmCallback) {
+                confirmCallback(true);
+            }
+            customConfirmModal.classList.remove('active');
+            confirmCallback = null;
+        });
+
+        confirmNoBtn.addEventListener('click', () => {
+            if (confirmCallback) {
+                confirmCallback(false); // Indicate cancellation
+            }
+            customConfirmModal.classList.remove('active');
+            confirmCallback = null;
+        });
+
+        // Input Validation Helper
+        function validateInput(inputElement, errorElement, validationFn, errorMessage) {
+            if (validationFn(inputElement.value)) {
+                inputElement.classList.remove('invalid');
+                errorElement.textContent = '';
+                return true;
+            } else {
+                inputElement.classList.add('invalid');
+                errorElement.textContent = errorMessage;
+                return false;
+            }
+        }
+
+        // Main Tab Switching (SGPA vs CGPA)
+        mainTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.getAttribute('data-tab');
+                
+                mainTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                sgpaCalcTabContent.classList.remove('active');
+                cgpaCalcTabContent.classList.remove('active');
+
+                // Toggle chart/progress bar visibility
+                if (tabId === 'sgpa-calc') {
+                    sgpaCalcTabContent.classList.add('active');
+                    sgpaChartContainer.style.display = 'block'; // Show chart for SGPA
+                    cgpaProgressBarContainer.style.display = 'none'; // Hide progress bar for SGPA
+                    
+                    subjects = []; // Clear data, no persistence
+                    renderSubjects();
+                    updateSGPA();
+                    updateChart();
+                    currentGradeLabel.textContent = 'Your Semester Grade Point Average';
+                } else if (tabId === 'cgpa-calc') {
+                    cgpaCalcTabContent.classList.add('active');
+                    sgpaChartContainer.style.display = 'none'; // Hide chart for CGPA
+                    cgpaProgressBarContainer.style.display = 'block'; // Show progress bar for CGPA
+
+                    semesters = []; // Clear data, no persistence
+                    renderSemesters();
+                    updateCGPA();
+                    
+                    gradeChart.data.datasets[0].data = gradeChart.data.labels.map(() => 0); // Clear chart data
+                    gradeChart.update();
+                    currentGradeLabel.textContent = 'Your Cumulative Grade Point Average';
+                }
+                
+                parseStatus.style.display = 'none'; // Hide status bar
+                // Clear all input fields on tab switch
+                subjectNameInput.value = '';
+                creditsInput.value = '';
+                gradeInput.value = '';
+                resultText.value = '';
+                semesterSgpaInput.value = '';
+                semesterCreditsInput.value = '';
+
+                // Clear any validation errors
+                document.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
+                document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+            });
+        });
+
+        // SGPA Sub-Tab Switching (Manual vs Paste)
+        sgpaSubTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.getAttribute('data-tab');
+                
+                sgpaSubTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                manualSgpaTabContent.classList.remove('active');
+                pasteSgpaTabContent.classList.remove('active');
+
+                if (tabId === 'manual-sgpa') {
+                    manualSgpaTabContent.classList.add('active');
+                } else if (tabId === 'paste-sgpa') {
+                    pasteSgpaTabContent.classList.add('active');
+                }
+                
+                // Clear SGPA inputs when switching sub-tabs
+                subjectNameInput.value = '';
+                creditsInput.value = '';
+                gradeInput.value = '';
+                resultText.value = '';
+                parseStatus.style.display = 'none';
+
+                // Clear any validation errors
+                document.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
+                document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+            });
+        });
+
+        // Mobile Paste Button functionality
+        mobilePasteBtn.addEventListener('click', async () => {
+            try {
+                const text = await navigator.clipboard.readText();
+                resultText.value = text;
+                showStatus('Content pasted successfully!', false);
+            } catch (err) {
+                console.error('Failed to read clipboard contents: ', err);
+                showStatus('Failed to paste. Please paste manually.', true);
+            }
+        });
+
+        // Add Subject for SGPA
+        addSubjectBtn.addEventListener('click', () => {
+            let isValid = true;
+
+            // Validate Subject Name
+            if (!validateInput(subjectNameInput, subjectNameError, val => val.trim() !== '', 'Subject name cannot be empty.')) {
+                isValid = false;
+            }
+
+            // Validate Credits
+            const creditsValue = parseFloat(creditsInput.value);
+            if (!validateInput(creditsInput, creditsError, val => !isNaN(parseFloat(val)) && parseFloat(val) > 0 && parseFloat(val) <= 10, 'Credits must be a number between 1 and 10.')) {
+                isValid = false;
+            }
+
+            // Validate Grade
+            if (!validateInput(gradeInput, gradeError, val => val !== '', 'Please select a grade.')) {
+                isValid = false;
+            }
+
+            if (!isValid) {
+                showStatus('Please correct the errors in the form.', true);
+                return;
+            }
+
+            const name = subjectNameInput.value.trim();
+            const credits = creditsValue;
+            const gradeValue = gradeInput.value; 
+            let grade;
+
+            if (gradeValue === 'QUALIFIED' || gradeValue === 'ABSENT') {
+                grade = gradeValue;
+            } else {
+                grade = parseInt(gradeValue);
+            }
+            
+            subjects.push({ 
+                name, 
+                credits, 
+                grade,
+                code: name.substring(0, Math.min(name.length, 10)).toUpperCase() // Simple code generation, max 10 chars
+            });
+            
+            renderSubjects();
+            updateSGPA();
+            updateChart();
+            
+            subjectNameInput.value = '';
+            creditsInput.value = ''; 
+            gradeInput.value = ''; 
+            
+            showStatus('Subject added successfully!', false);
+        });
+
+        // Function to strip HTML tags from a string
+        function stripHtmlTags(htmlString) {
+            const doc = new DOMParser().parseFromString(htmlString, 'text/html');
+            return doc.body.textContent || "";
+        }
+
+        // Helper function to parse a collected block of lines into a subject object
+        function parseSubjectBlock(blockLines, subjectCodePattern, numberPattern, gradePattern) {
+            let subject = { code: '', name: '', credits: 0, grade: undefined }; 
+            let nameParts = [];
+            let numericParts = []; 
+            let foundGradeText = ''; 
+            let isQualifiedOrAbsent = false;
+
+            // Try to find code in the first line
+            const codeMatch = subjectCodePattern.exec(blockLines[0]);
+            if (!codeMatch) return null; 
+            subject.code = codeMatch[1];
+
+            // Iterate through lines to find name, credits, and grade
+            for (let i = 1; i < blockLines.length; i++) {
+                const line = blockLines[i].trim();
+                if (line === "") continue;
+
+                const gradeMatch = gradePattern.exec(line);
+                if (gradeMatch) {
+                    foundGradeText = gradeMatch[1].toUpperCase(); 
+                    if (foundGradeText === 'QUALIFIED' || foundGradeText === 'ABSENT') {
+                        isQualifiedOrAbsent = true;
+                    }
+                    break; // Grade found, stop looking for name/credits in this block
+                }
+
+                const numMatch = numberPattern.exec(line);
+                if (numMatch) {
+                    // Collect all numbers, the last one is likely credits
+                    numericParts.push(parseFloat(numMatch[0]));
+                    continue;
+                }
+
+                // If it's not a code, grade, or pure number, it's likely part of the name
+                if (!subjectCodePattern.test(line) && !line.includes("Disclaimer") && !line.includes("University") && !line.includes("Helpline") && !line.includes("Report a Bug")) {
+                    nameParts.push(line);
+                }
+            }
+
+            subject.name = nameParts.join(' ').trim();
+            
+            if (isQualifiedOrAbsent) {
+                subject.grade = foundGradeText; 
+            } else {
+                subject.grade = reverseGradeMap[foundGradeText]; 
+            }
+            
+            // Assume the last collected number is the credit
+            if (numericParts.length > 0) {
+                subject.credits = numericParts[numericParts.length - 1];
+            } else {
+                subject.credits = 0; 
+            }
+
+            // Basic validation for a valid subject
+            if (subject.code && !isNaN(subject.credits) && subject.credits > 0 && subject.grade !== undefined && subject.name) { 
+                return subject;
+            }
+            return null; 
+        }
+
+        // Main parsing function with robust logic
+        function parseResultSheet(text) {
+            let rawText = text.trim();
+            if (rawText.includes('<') && rawText.includes('>')) {
+                rawText = stripHtmlTags(rawText);
+            }
+
+            const lines = rawText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            let parsedSubjects = [];
+
+            const subjectCodePattern = /^(\d{2}[A-Z]{3}-\d{3,4})$/i; 
+            const numberPattern = /^\d+(\.\d+)?$/; // Matches numbers like "49.84", "4", "4.00"
+            const gradePattern = /^([A-Z]+[+]?|Qualified|Absent|E|F|I)$/i; 
+
+            // Updated single-line subject regex to correctly capture integer or decimal credits
+            // Group 1: code, Group 2: name, Group 3: credits, Group 4: grade
+            const singleLineSubjectRegex = /^(\d{2}[A-Z]{3}-\d{3,4})\s+(.+?)\s+(?:(?:\d+(?:\.\d+)?|\s*)\s+){0,2}(\d+(?:\.\d+)?)\s+([A-Z]+[+]?|Qualified|Absent|E|F|I)$/i;
+
+
+            const endOfSubjectsKeywords = ["Disclaimer:", "University is not responsible", "General Helpline No:", "Email Id:", "Report a Bug", "Chandigarh University, Gharuan, Mohali (Punjab)"];
+
+            let currentBlockLines = [];
+            let isInsideSubjectBlock = false;
+
+            for (let i = 0; i < lines.length; i++) {
+                const trimmedLine = lines[i].trim();
+                if (trimmedLine === "") continue;
+
+                const lowerCaseLine = trimmedLine.toLowerCase();
+                const isEndOfSubjectsSection = endOfSubjectsKeywords.some(keyword => lowerCaseLine.includes(keyword.toLowerCase()));
+
+                if (isEndOfSubjectsSection) {
+                    if (isInsideSubjectBlock && currentBlockLines.length > 0) {
+                        const subject = parseSubjectBlock(currentBlockLines, subjectCodePattern, numberPattern, gradePattern);
+                        if (subject) parsedSubjects.push(subject);
+                    }
+                    isInsideSubjectBlock = false;
+                    currentBlockLines = [];
+                    continue;
+                }
+
+                const singleLineMatch = singleLineSubjectRegex.exec(trimmedLine);
+                if (singleLineMatch) {
+                    // If a single line match is found, process it immediately
+                    const gradeText = singleLineMatch[4].toUpperCase();
+                    parsedSubjects.push({
+                        code: singleLineMatch[1],
+                        name: singleLineMatch[2].trim(),
+                        credits: parseFloat(singleLineMatch[3]),
+                        grade: (gradeText === 'QUALIFIED' || gradeText === 'ABSENT') ? gradeText : reverseGradeMap[gradeText] 
+                    });
+                    isInsideSubjectBlock = false; // Reset state
+                    currentBlockLines = []; // Clear current block
+                    continue;
+                }
+
+                if (subjectCodePattern.test(trimmedLine)) {
+                    // Start of a new subject block
+                    if (isInsideSubjectBlock && currentBlockLines.length > 0) {
+                        // If there's an ongoing block, parse it first
+                        const subject = parseSubjectBlock(currentBlockLines, subjectCodePattern, numberPattern, gradePattern);
+                        if (subject) parsedSubjects.push(subject);
+                    }
+                    currentBlockLines = [trimmedLine]; // Start new block
+                    isInsideSubjectBlock = true;
+                } else if (isInsideSubjectBlock) {
+                    // Continue collecting lines for the current subject block
+                    currentBlockLines.push(trimmedLine);
+                }
+            }
+
+            // After loop, parse any remaining block
+            if (isInsideSubjectBlock && currentBlockLines.length > 0) {
+                const subject = parseSubjectBlock(currentBlockLines, subjectCodePattern, numberPattern, gradePattern);
+                if (subject) parsedSubjects.push(subject);
+            }
+            return parsedSubjects;
+        }
+
+        // Parse Results event listener (for SGPA)
+        parseResultsBtn.addEventListener('click', () => {
+            const text = resultText.value.trim();
+            if (!text) {
+                showStatus('Please paste your result sheet', true);
+                parseStatus.style.display = 'none';
+                return;
+            }
+            
+            parseStatus.style.display = 'flex';
+            parseStatus.classList.remove('error');
+            parseStatus.innerHTML = '<i class="fas fa-sync fa-spin"></i> Processing your results...';
+            
+            setTimeout(() => {
+                try {
+                    const parsedSubjects = parseResultSheet(text);
+                    if (parsedSubjects.length === 0) {
+                        showStatus('No valid subjects found. Check your format.', true);
+                        parseStatus.style.display = 'none';
+                        return;
+                    }
+                    
+                    subjects = parsedSubjects;
+                    renderSubjects();
+                    updateSGPA();
+                    updateChart();
+                    
+                    showStatus(`Successfully parsed ${parsedSubjects.length} subjects!`, false);
+                    resultText.value = ''; // Clear textarea after successful parse
+                    
+                } catch (error) {
+                    showStatus(`Error: ${error.message}`, true);
+                    console.error("Parsing error:", error); 
+                    parseStatus.style.display = 'none';
+                }
+            }, 100);
+        });
+
+        // Reset SGPA Data
+        resetBtn.addEventListener('click', () => {
+            showCustomConfirm('Are you sure you want to clear all current semester subjects?', (confirmed) => {
+                if (confirmed) {
+                    subjects = [];
+                    renderSubjects();
+                    updateSGPA();
+                    updateChart();
+                    parseStatus.style.display = 'none'; 
+                    showStatus('Current semester subjects cleared!', false);
+                }
+            });
+        });
+
+        // Export PDF
+        exportPdfBtn.addEventListener('click', async () => {
+            const currentTab = document.querySelector('#mainTabs .tab.active').getAttribute('data-tab');
+            if (currentTab === 'sgpa-calc' && subjects.length === 0) {
+                showStatus('No SGPA data to export.', true);
+                return;
+            }
+            if (currentTab === 'cgpa-calc' && semesters.length === 0) {
+                showStatus('No CGPA data to export.', true);
+                return;
+            }
+            
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                doc.setFontSize(22);
+                doc.setTextColor(67, 97, 238);
+
+                let reportTitle = '';
+                let mainValueLabel = '';
+                let mainValue = 0;
+                let headers = [];
+                let data = [];
+
+                if (currentTab === 'sgpa-calc') {
+                    reportTitle = 'SGPA Report';
+                    mainValueLabel = 'Current SGPA:';
+                    mainValue = calculateSGPA();
+                    headers = [['Subject Code', 'Subject Name', 'Credits', 'Grade', 'Points']];
+                    data = subjects.filter(s => typeof s.grade === 'number' && !isNaN(s.grade) && s.credits > 0)
+                                    .map(subject => [
+                        subject.code,
+                        subject.name,
+                        subject.credits.toFixed(1), // Ensure credits are formatted consistently
+                        gradeMap[subject.grade], 
+                        subject.grade.toFixed(2) // Points as decimal if applicable
+                    ]);
+                } else if (currentTab === 'cgpa-calc') {
+                    reportTitle = 'CGPA Report';
+                    mainValueLabel = 'Calculated CGPA:';
+                    mainValue = calculateCGPA();
+                    headers = [['Semester SGPA', 'Total Credits', 'Weighted Points']];
+                    data = semesters.map(sem => [
+                        sem.sgpa.toFixed(2),
+                        sem.credits.toFixed(1),
+                        (sem.sgpa * sem.credits).toFixed(2)
+                    ]);
+                }
+
+                doc.text(reportTitle, 105, 20, null, null, 'center');
+                doc.setFontSize(12);
+                doc.setTextColor(100, 100, 100);
+                doc.text('Generated by GradeFlow Pro: Your Academic Compass', 105, 28, null, null, 'center');
+                
+                const now = new Date();
+                doc.setFontSize(14);
+                doc.setTextColor(document.body.classList.contains('dark-mode') ? 255 : 0); 
+
+                doc.text(`Date: ${now.toLocaleDateString()}`, 15, 40);
+                doc.text(`${mainValueLabel} ${mainValue.toFixed(2)}`, 15, 50);
+                
+                doc.autoTable({
+                    startY: 60,
+                    head: headers,
+                    body: data,
+                    theme: 'grid',
+                    headStyles: {
+                        fillColor: [67, 97, 238],
+                        textColor: 255,
+                        fontStyle: 'bold'
+                    },
+                    styles: {
+                        cellPadding: 3,
+                        fontSize: 10,
+                        valign: 'middle',
+                        textColor: document.body.classList.contains('dark-mode') ? 255 : 0
+                    },
+                    margin: { top: 10 }
+                });
+                
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setFontSize(10);
+                    doc.setTextColor(100, 100, 100);
+                    doc.text(`Page ${i} of ${pageCount}`, 105, 287, null, null, 'center');
+                }
+                
+                doc.save(`${reportTitle.replace(' ', '_')}_${now.getTime()}.pdf`);
+                showStatus(`${reportTitle} exported successfully!`, false);
+            } catch (error) {
+                showStatus('Failed to generate PDF: ' + error.message, true);
+                console.error("PDF export error:", error);
+            }
+        });
+
+        // Export CSV
+        exportCsvBtn.addEventListener('click', () => {
+            const currentTab = document.querySelector('#mainTabs .tab.active').getAttribute('data-tab');
+            if (currentTab === 'sgpa-calc' && subjects.length === 0) {
+                showStatus('No SGPA data to export.', true);
+                return;
+            }
+            if (currentTab === 'cgpa-calc' && semesters.length === 0) {
+                showStatus('No CGPA data to export.', true);
+                return;
+            }
+            
+            try {
+                let csv = '';
+                let filename = '';
+                if (currentTab === 'sgpa-calc') {
+                    csv += 'Subject Code,Subject Name,Credits,Grade,Points\n';
+                    subjects.filter(s => typeof s.grade === 'number' && !isNaN(s.grade) && s.credits > 0)
+                            .forEach(subject => {
+                        csv += `"${subject.code}","${subject.name}",${subject.credits.toFixed(1)},"${gradeMap[subject.grade]}",${subject.grade.toFixed(2)}\n`;
+                    });
+                    const sgpa = calculateSGPA();
+                    csv += `\nSGPA,,,${sgpa.toFixed(2)}\n`; 
+                    filename = `sgpa_report_${new Date().getTime()}.csv`;
+                } else if (currentTab === 'cgpa-calc') {
+                    csv += 'Semester SGPA,Total Credits,Weighted Points\n';
+                    semesters.forEach(sem => {
+                        csv += `${sem.sgpa.toFixed(2)},${sem.credits.toFixed(1)},${(sem.sgpa * sem.credits).toFixed(2)}\n`;
+                    });
+                    const cgpa = calculateCGPA();
+                    csv += `\nCGPA,,,${cgpa.toFixed(2)}\n`;
+                    filename = `cgpa_report_${new Date().getTime()}.csv`;
+                }
+                
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                
+                link.setAttribute('href', url);
+                link.setAttribute('download', filename);
+                link.style.visibility = 'hidden';
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showStatus('CSV exported successfully!', false);
+            } catch (error) {
+                showStatus('Failed to generate CSV: ' + error.message, true);
+                console.error("CSV export error:", error);
+            }
+        });
+
+        // Delete Subject (for SGPA)
+        function deleteSubject(index) {
+            subjects.splice(index, 1);
+            renderSubjects();
+            updateSGPA();
+            updateChart();
+            showStatus('Subject deleted.', false); 
+        }
+
+        // Render Subjects (for SGPA)
+        function renderSubjects() {
+            resultBody.innerHTML = '';
+            
+            if (subjects.length === 0) {
+                resultBody.innerHTML = `
+                    <tr class="empty-state">
+                        <td colspan="5">
+                            <i class="fas fa-inbox"></i>
+                            <p>No subjects added yet. Start by adding subjects manually or pasting your results!</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            subjects.forEach((subject, index) => {
+                const row = document.createElement('tr');
+                const isSpecialGrade = (subject.grade === 'QUALIFIED' || subject.grade === 'ABSENT');
+                row.classList.toggle('bg-gray-100', isSpecialGrade);
+                row.classList.toggle('text-gray-500', isSpecialGrade);
+                row.classList.toggle('italic', isSpecialGrade);
+
+                let gradeDisplayText;
+                if (isSpecialGrade) {
+                    gradeDisplayText = subject.grade;
+                } else {
+                    gradeDisplayText = gradeMap[subject.grade] || 'N/A';
+                }
+
+                const pointsDisplayText = isSpecialGrade ? 'N/A' : (subject.grade !== undefined ? subject.grade.toFixed(2) : 'N/A'); // Ensure points are formatted
+
+                row.innerHTML = `
+                    <td>
+                        <div><strong>${subject.code}</strong></div>
+                        <div style="font-size: 0.9em; opacity: 0.8;">${subject.name}</div>
+                    </td>
+                    <td>${subject.credits.toFixed(1)}</td> 
+                    <td>${gradeDisplayText}</td> 
+                    <td>${pointsDisplayText}</td>
+                    <td class="actions">
+                        <button class="action-btn" title="Delete" onclick="deleteSubject(${index})">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
+                resultBody.appendChild(row);
+            });
+        }
+
+        // Calculate SGPA
+        function calculateSGPA() {
+            if (subjects.length === 0) return 0;
+            
+            let totalCredits = 0;
+            let totalPoints = 0;
+            
+            subjects.forEach(subject => {
+                if (typeof subject.grade === 'number' && !isNaN(subject.grade) && subject.credits > 0) { 
+                    totalCredits += subject.credits;
+                    totalPoints += subject.credits * subject.grade;
+                }
+            });
+            
+            if (totalCredits === 0) return 0; 
+            
+            return (totalPoints / totalCredits);
+        }
+
+        // Update SGPA Display
+        function updateSGPA() {
+            const sgpa = calculateSGPA();
+            currentGradeValue.textContent = sgpa.toFixed(2);
+            currentGradeValue.classList.add('highlight');
+            setTimeout(() => currentGradeValue.classList.remove('highlight'), 2000);
+            updateGradeDisplayColor(); // This will update the color
+        }
+
+        // Update Chart (for SGPA)
+        function updateChart() {
+            const gradeCount = {
+                'A+': 0, 'A': 0, 'B+': 0, 'B': 0,
+                'C+': 0, 'C': 0, 'D': 0, 'F': 0
+            };
+            
+            subjects.forEach(subject => {
+                if (typeof subject.grade === 'number' && !isNaN(subject.grade) && subject.credits > 0) {
+                    const grade = gradeMap[subject.grade];
+                    if (gradeCount.hasOwnProperty(grade)) {
+                        gradeCount[grade]++;
+                    }
+                }
+            });
+            
+            gradeChart.data.datasets[0].data = [
+                gradeCount['A+'], gradeCount['A'], gradeCount['B+'], gradeCount['B'],
+                gradeCount['C+'], gradeCount['C'], gradeCount['D'], gradeCount['F']
+            ];
+            
+            updateChartColors(); 
+            gradeChart.update();
+        }
+
+        // CGPA Logic
+        addSemesterBtn.addEventListener('click', () => {
+            let isValid = true;
+
+            // Validate SGPA
+            const sgpaValue = parseFloat(semesterSgpaInput.value);
+            if (!validateInput(semesterSgpaInput, semesterSgpaError, val => !isNaN(parseFloat(val)) && parseFloat(val) >= 0 && parseFloat(val) <= 10, 'SGPA must be between 0 and 10.')) {
+                isValid = false;
+            }
+
+            // Validate Credits
+            const creditsValue = parseFloat(semesterCreditsInput.value);
+            if (!validateInput(semesterCreditsInput, semesterCreditsError, val => !isNaN(parseFloat(val)) && parseFloat(val) > 0, 'Credits must be a positive number.')) {
+                isValid = false;
+            }
+
+            if (!isValid) {
+                showStatus('Please correct the errors in the form.', true);
+                return;
+            }
+
+            semesters.push({ sgpa: sgpaValue, credits: creditsValue });
+            renderSemesters();
+            updateCGPA();
+            showStatus('Semester added for CGPA calculation!', false);
+
+            semesterSgpaInput.value = '';
+            semesterCreditsInput.value = '';
+        });
+
+        resetCgpaBtn.addEventListener('click', () => {
+            showCustomConfirm('Are you sure you want to clear all previous semester data for CGPA?', (confirmed) => {
+                if (confirmed) {
+                    semesters = [];
+                    renderSemesters();
+                    updateCGPA();
+                    showStatus('All semester data cleared for CGPA!', false);
+                }
+            });
+        });
+
+        function deleteSemester(index) {
+            semesters.splice(index, 1);
+            renderSemesters();
+            updateCGPA();
+            showStatus('Semester entry deleted.', false);
+        }
+
+        function renderSemesters() {
+            cgpaBody.innerHTML = '';
+            if (semesters.length === 0) {
+                cgpaEmptyState.style.display = 'block';
+                return;
+            }
+            cgpaEmptyState.style.display = 'none';
+
+            semesters.forEach((semester, index) => {
+                const row = document.createElement('tr');
+                const weightedPoints = semester.sgpa * semester.credits;
+                row.innerHTML = `
+                    <td>${semester.sgpa.toFixed(2)}</td>
+                    <td>${semester.credits.toFixed(1)}</td>
+                    <td>${weightedPoints.toFixed(2)}</td>
+                    <td class="actions">
+                        <button class="action-btn" title="Delete" onclick="deleteSemester(${index})">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
+                cgpaBody.appendChild(row);
+            });
+        }
+
+        function calculateCGPA() {
+            if (semesters.length === 0) return 0;
+
+            let totalWeightedPoints = 0;
+            let totalCreditsSum = 0;
+
+            semesters.forEach(semester => {
+                totalWeightedPoints += semester.sgpa * semester.credits;
+                totalCreditsSum += semester.credits;
+            });
+
+            if (totalCreditsSum === 0) return 0;
+            return totalWeightedPoints / totalCreditsSum;
+        }
+
+        function updateCGPA() {
+            const cgpa = calculateCGPA();
+            currentGradeValue.textContent = cgpa.toFixed(2);
+            currentGradeValue.classList.add('highlight');
+            setTimeout(() => currentGradeValue.classList.remove('highlight'), 2000);
+            updateGradeDisplayColor(); // Update color
+            updateCGPAProgressBar(cgpa); // Update progress bar
+        }
+
+        // Function to update the CGPA progress bar
+        function updateCGPAProgressBar(cgpa) {
+            const percentage = (cgpa / 10) * 100; // CGPA on a 0-10 scale
+            cgpaProgressBar.style.width = `${percentage}%`;
+            cgpaProgressLabel.textContent = `${cgpa.toFixed(2)} / 10.00`;
+        }
+
+        // Function to update the color of the displayed SGPA/CGPA value
+        function updateGradeDisplayColor() {
+            const value = parseFloat(currentGradeValue.textContent);
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            if (isDarkMode) {
+                if (value >= 9.0) {
+                    currentGradeValue.style.color = '#4cc9f0';
+                } else if (value >= 8.0) {
+                    currentGradeValue.style.color = '#4361ee';
+                } else if (value >= 7.0) {
+                    currentGradeValue.style.color = '#7209b7';
+                } else if (value >= 6.0) {
+                    currentGradeValue.style.color = '#f72585';
+                } else {
+                    currentGradeValue.style.color = '#ff6b6b';
+                }
+            } else {
+                currentGradeValue.style.color = getComputedStyle(document.body).getPropertyValue('--text-dark');
+            }
+        }
+
+        // Save data to localStorage (only theme persistence)
+        function saveData() {
+            localStorage.setItem('gradeFlowTheme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        }
+
+        // Load data from localStorage (only theme persistence)
+        function loadData() {
+            const savedTheme = localStorage.getItem('gradeFlowTheme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode'); 
+            }
+        }
+
+        // Function to show status messages
+        function showStatus(message, isError) {
+            parseStatus.style.display = 'flex';
+            parseStatus.classList.toggle('error', isError);
+            parseStatus.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> <span>${message}</span>`;
+            if (!isError) {
+                setTimeout(() => {
+                    parseStatus.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // Initialize application on load
+        function init() {
+            loadData(); // Load theme preference
+
+            // Explicitly clear data arrays as persistence is removed
+            subjects = []; 
+            semesters = []; 
+            
+            // Set initial tab state to SGPA by default
+            // This also handles the display of chart vs progress bar correctly
+            document.querySelector(`#mainTabs .tab[data-tab="sgpa-calc"]`).click();
+            document.querySelector(`#sgpaSubTabs .tab[data-tab="manual-sgpa"]`).click(); // Default SGPA sub-tab
+
+            renderSubjects();
+            renderSemesters();
+            updateSGPA();
+            updateCGPA();
+            updateChart(); // Make sure chart is updated even if empty
+            updateChartColors(); 
+            updateGradeDisplayColor(); // Initial color for the displayed grade
+            
+            // Clear all input fields
+            subjectNameInput.value = '';
+            creditsInput.value = ''; 
+            gradeInput.value = ''; 
+            resultText.value = '';
+            semesterSgpaInput.value = '';
+            semesterCreditsInput.value = '';
+
+            // Clear any validation errors
+            document.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
+            document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+        }
+
+        // Initialize the application
+        init();
+
+        // Send Feedback/Bug Report
+        sendFeedbackBtn.addEventListener('click', () => {
+            const feedback = feedbackTextarea.value.trim();
+            if (feedback) {
+                const subject = encodeURIComponent("GradeFlow Pro Feedback/Bug Report");
+                const body = encodeURIComponent(feedback);
+                window.location.href = `mailto:futureengineer9915@gmail.com?subject=${subject}&body=${body}`;
+                feedbackTextarea.value = ''; 
+            } else {
+                showStatus('Please enter your feedback or bug description.', true);
+            }
+        });
+    </script>
+</body>
+</html>

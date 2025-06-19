@@ -362,11 +362,11 @@
             display: block;
         }
 
-        /* SGPA CONTAINER CONSTRAINTS - Specific fix for SGPA tab */
+        /* SGPA CONTAINER CORE FIX - Specific fix for SGPA tab */
         #sgpa-calc {
-            min-width: 0; /* Override inherited min-width */
-            max-width: 100%; /* Ensure it doesn't exceed parent width */
-            /* box-sizing: border-box is global, so no need to repeat here unless specific override needed */
+            min-width: 0 !important; /* Override any potential inherited min-width or browser defaults */
+            max-width: 100% !important; /* Ensure it never exceeds its parent width */
+            overflow-x: hidden !important; /* Prevent horizontal scrolling within this container */
         }
 
         /* Input group styling */
@@ -1179,6 +1179,49 @@
             th, td {
                 font-size: 11px;
                 padding: 6px 4px;
+            }
+        }
+
+        /* MOBILE-SPECIFIC OVERHAUL (max-width: 768px) - Targeted SGPA Fixes */
+        @media (max-width: 768px) {
+            #sgpa-calc {
+                width: 100% !important; /* Ensure it takes full width within the media query */
+            }
+                
+            /* Child element constraints within #sgpa-calc */
+            #sgpa-calc .tabs, /* This targets the sub-tabs within SGPA calc */
+            #sgpa-calc .input-group {
+                max-width: 100% !important;
+                min-width: 0 !important;
+                box-sizing: border-box !important;
+            }
+                
+            /* Input grid restructuring - apply to the manual entry container */
+            #manual-sgpa { /* This is the actual container for the individual input groups */
+                display: flex !important; /* Use flexbox for explicit stacking */
+                flex-direction: column !important;
+                gap: 15px !important; /* Consistent spacing between input groups */
+                /* Remove any padding/margin that would cause overflow inside here */
+                padding: 0 !important; /* Remove internal padding if present */
+                margin: 0 !important; /* Remove internal margin if present */
+            }
+            
+            /* Specific padding/margin adjustments for input groups and tab content within SGPA */
+            #sgpa-calc .input-group {
+                /* Explicitly set margin-bottom to maintain spacing between input fields */
+                margin-bottom: 15px !important; 
+            }
+            /* Remove margin from the last input group before the add button */
+            #sgpa-calc .input-group:last-of-type {
+                margin-bottom: 0 !important;
+            }
+
+            /* Input field constraints */
+            #sgpa-calc input[type="text"],
+            #sgpa-calc select,
+            #sgpa-calc textarea { /* Include textarea for paste area */
+                max-width: 100% !important;
+                box-sizing: border-box !important;
             }
         }
     </style>
